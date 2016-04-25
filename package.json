@@ -1,0 +1,22 @@
+{
+  "name": "jane-err",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kyle-burke/jane-err.git"
+  },
+  "author": "Kyle Burke <kyle.alex.burke@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kyle-burke/jane-err/issues"
+  },
+  "homepage": "https://github.com/kyle-burke/jane-err#readme",
+  "dependencies": {
+    "spellchecker": "^3.3.1"
+  }
+}
