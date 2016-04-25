@@ -1,65 +1,42 @@
-var spellchecker = require('spellchecker');
-var wordnikApiKey = require('./wordnik');
-var http = require('request-promise');
-var Promise = require('bluebird');
+var http = require('http');
+var utils = require('./utilities');
+var titles = require('./titles');
 
-var originalWord = 'wall';
-var list = getRelatedWords(originalWord);
-var related = pickSimilarWords(originalWord, list, 1);
+function handleRequest(request, response) {
 
-console.log(related);
+  var title = titles.randomElement();
+  var newTitle = '';
 
-comparePartsOfSpeech('cat', 'dog')
-.then(function(same) {
-  console.log(same);
-});
-
-function getRelatedWords(input) {
-  return spellchecker.getCorrectionsForMisspelling(input);
-}
-
-function pickSimilarWords(rootWord, words, degreesOfSeparation) {
-  var validWords = [];
-
-  for (var i = 0; i < words.length; i++) {
-    if (rootWord.length !== words[i].length) {
+  while (newTitle === '') {
+    // break title into words
+    var titleWords = title.split(' ');
+    var word = titleWords.randomElement();
+    console.log('random word from title: ' + word);
+    // BORING. try again
+    if (utils.wordIsBoring(word)) {
+      continue;
+    }
+    // use spellchecker to get similar words
+    var relatedWords = utils.getRelatedWords(word);
+    // pick some words that are within x degrees of separation from our original word
+    var punWords = utils.pickSimilarWords(word, relatedWords, 1);
+    var punWord = punWords.randomElement();
+    if (punWord === undefined) {
       continue;
     }
 
-    var difference = 0;
-    for (var j = 0; j < words[i].length; j++) {
-      if (rootWord[j] !== words[i][j]) {
-        difference++;
-      }
-    }
+    var punWordCapitalized = punWord[0].toUpperCase() + punWord.slice(1);
 
-    if (difference <= degreesOfSeparation && difference !== 0) {
-      validWords.push(words[i]);
-    }
+    var newTitle = utils.replaceWord(titleWords, word, punWordCapitalized);
+    console.log('pun word: ' + punWord);
   }
 
-  return validWords;
+  response.writeHead(200, {"Content-Type": "application/json"});
+  response.end(JSON.stringify({'title': newTitle.join(' ')}));
 }
 
-function comparePartsOfSpeech(first, second) {
-  var optionsFirst = {
-    uri: 'http://api.wordnik.com:80/v4/word.json/' + first + '/definitions',
-    qs: {
-      api_key: wordnikApiKey
-    }
-  };
+var server = http.createServer(handleRequest);
 
-  var optionsSecond = {
-    uri: 'http://api.wordnik.com:80/v4/word.json/' + second + '/definitions',
-    qs: {
-      api_key: wordnikApiKey
-    }
-  };
-
-  return Promise.all([http(optionsFirst), http(optionsSecond)])
-  .then(function(response) {
-    firstDefinition = JSON.parse(response[0]);
-    secondDefinition = JSON.parse(response[1]);
-    return firstDefinition[0].partOfSpeech === secondDefinition[0].partOfSpeech;
-  })
-}
+server.listen(8008, function() {
+  console.log('Server ready at localhost:8008');
+})
